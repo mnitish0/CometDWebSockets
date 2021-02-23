@@ -1,3 +1,225 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
-Resources: {}
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  cometDWebsocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Description: !Sub
+        - ${ResourceName} From Stack ${StackTagName} Environment ${EnvironmentTagName}
+        - ResourceName: cometDWebsocket
+      Name: !Sub
+        - ${StackTagName}-${EnvironmentTagName}-${ResourceName}
+        - ResourceName: cometDWebsocket
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+  cometDWebsocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      StageName: !Ref EnvironmentAPIGatewayStageName
+      DeploymentId: !Ref cometDWebsocketDeployment
+  cometDWebsocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    Properties:
+      ApiId: !Ref cometDWebsocket
+    DependsOn:
+      - cometDWebsocketRouteconnect
+      - cometDWebsocketRouteconnectResponse
+      - cometDWebsocketRoutedisconnect
+      - cometDWebsocketRoutedisconnectResponse
+      - cometDWebsocketRoutedefault
+      - cometDWebsocketRoutedefaultResponse
+      - cometDWebsocketRouteOpportunityChange
+      - cometDWebsocketRouteOpportunityChangeResponse
+      - cometDWebsocketRouteconnectIntegrationResponse
+      - cometDWebsocketRouteOpportunityChangeIntegrationResponse
+      - cometDWebsocketRoutedisconnectIntegrationResponse
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-Function
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function
+      CodeUri: src/Function
+      Handler: index.handler
+      Runtime: nodejs14.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectedClients
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectedClients
+          TABLE_ARN: !GetAtt ConnectedClients.Arn
+  Function2:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-Function2
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function2
+      CodeUri: src/Function2
+      Handler: index.handler
+      Runtime: nodejs14.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectedClients
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectedClients
+          TABLE_ARN: !GetAtt ConnectedClients.Arn
+  Function3:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-Function3
+      Description: !Sub
+        - Stack ${StackTagName} Environment ${EnvironmentTagName} Function ${ResourceName}
+        - ResourceName: Function3
+      CodeUri: src/Function3
+      Handler: index.handler
+      Runtime: nodejs14.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Policies:
+        - AWSXrayWriteOnlyAccess
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConnectedClients
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ConnectedClients
+          TABLE_ARN: !GetAtt ConnectedClients.Arn
+  cometDWebsocketRouteconnect:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteKey: $connect
+      Target: !Sub integrations/${cometDWebsocketRouteconnectIntegration}
+  cometDWebsocketRouteconnectResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteId: !Ref cometDWebsocketRouteconnect
+      RouteResponseKey: $default
+  cometDWebsocketRoutedisconnect:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteKey: $disconnect
+      Target: !Sub integrations/${cometDWebsocketRoutedisconnectIntegration}
+  cometDWebsocketRoutedisconnectResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteId: !Ref cometDWebsocketRoutedisconnect
+      RouteResponseKey: $default
+  cometDWebsocketRoutedefault:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteKey: $default
+  cometDWebsocketRoutedefaultResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteId: !Ref cometDWebsocketRoutedefault
+      RouteResponseKey: $default
+  cometDWebsocketRouteOpportunityChange:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteKey: OpportunityChange
+      Target: !Sub integrations/${cometDWebsocketRouteOpportunityChangeIntegration}
+  cometDWebsocketRouteOpportunityChangeResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      RouteId: !Ref cometDWebsocketRouteOpportunityChange
+      RouteResponseKey: $default
+  cometDWebsocketRouteconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations
+  cometDWebsocketRouteconnectIntegrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt Function.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${cometDWebsocket}/*/$connect
+  cometDWebsocketRouteconnectIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      IntegrationId: !Ref cometDWebsocketRouteconnectIntegration
+      IntegrationResponseKey: $default
+  cometDWebsocketRouteOpportunityChangeIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function3.Arn}/invocations
+  cometDWebsocketRouteOpportunityChangeIntegrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt Function3.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${cometDWebsocket}/*/OpportunityChange
+  cometDWebsocketRouteOpportunityChangeIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      IntegrationId: !Ref cometDWebsocketRouteOpportunityChangeIntegration
+      IntegrationResponseKey: $default
+  cometDWebsocketRoutedisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function2.Arn}/invocations
+  cometDWebsocketRoutedisconnectIntegrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt Function2.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${cometDWebsocket}/*/$disconnect
+  cometDWebsocketRoutedisconnectIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref cometDWebsocket
+      IntegrationId: !Ref cometDWebsocketRoutedisconnectIntegration
+      IntegrationResponseKey: $default
+  ConnectedClients:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+Parameters:
+  StackTagName:
+    Type: String
+    Description: Stack Name (injected by Stackery at deployment time)
+  EnvironmentTagName:
+    Type: String
+    Description: Environment Name (injected by Stackery at deployment time)
+  EnvironmentAPIGatewayStageName:
+    Type: String
+    Description: Environment name used for API Gateway Stage names (injected by Stackery at deployment time)
