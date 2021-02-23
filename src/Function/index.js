@@ -1,6 +1,4 @@
-exports.handler = async (event, context) => {
-  // Log the event argument for debugging and for use in local development.
-  console.log(JSON.stringify(event, undefined, 2));
+exports.handler = (event, context, callback) => { const connectionId = event.requestContext.connectionId; addConnectionId(connectionId).then(() => { callback(null, { statusCode: 200, }) }); }
 
-  return {};
-};
+function addConnectionId(connectionId) { 
+    return ddb.put({ TableName: 'ConnectedClients', Item: { connectionid: connectionId }, }).promise(); }
