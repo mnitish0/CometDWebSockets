@@ -35,12 +35,6 @@ Resources:
       - cometDWebsocketRouteOpportunityChange
       - cometDWebsocketRouteOpportunityChangeResponse
       - cometDWebsocketRouteOpportunityChangeIntegrationResponse
-      - cometDWebsocketRouteDataChange
-      - cometDWebsocketRouteDataChangeResponse
-      - cometDWebsocketRouteDataChangeIntegrationResponse
-      - cometDWebsocketRouteonMessage
-      - cometDWebsocketRouteonMessageResponse
-      - cometDWebsocketRouteonMessageIntegrationResponse
   Function:
     Type: AWS::Serverless::Function
     Properties:
@@ -255,24 +249,6 @@ Resources:
       ApiId: !Ref cometDWebsocket
       IntegrationId: !Ref cometDWebsocketRouteOpportunityChangeIntegration
       IntegrationResponseKey: $default
-  cometDWebsocketRouteDataChange:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      RouteKey: DataChange
-      Target: !Sub integrations/${cometDWebsocketRouteDataChangeIntegration}
-  cometDWebsocketRouteDataChangeResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      RouteId: !Ref cometDWebsocketRouteDataChange
-      RouteResponseKey: $default
-  cometDWebsocketRouteDataChangeIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function3.Arn}/invocations
   cometDWebsocketRouteDataChangeIntegrationPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -280,30 +256,6 @@ Resources:
       FunctionName: !GetAtt Function3.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${cometDWebsocket}/*/DataChange
-  cometDWebsocketRouteDataChangeIntegrationResponse:
-    Type: AWS::ApiGatewayV2::IntegrationResponse
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      IntegrationId: !Ref cometDWebsocketRouteDataChangeIntegration
-      IntegrationResponseKey: $default
-  cometDWebsocketRouteonMessage:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      RouteKey: onMessage
-      Target: !Sub integrations/${cometDWebsocketRouteonMessageIntegration}
-  cometDWebsocketRouteonMessageResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      RouteId: !Ref cometDWebsocketRouteonMessage
-      RouteResponseKey: $default
-  cometDWebsocketRouteonMessageIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function3.Arn}/invocations
   cometDWebsocketRouteonMessageIntegrationPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -311,12 +263,6 @@ Resources:
       FunctionName: !GetAtt Function3.Arn
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${cometDWebsocket}/*/onMessage
-  cometDWebsocketRouteonMessageIntegrationResponse:
-    Type: AWS::ApiGatewayV2::IntegrationResponse
-    Properties:
-      ApiId: !Ref cometDWebsocket
-      IntegrationId: !Ref cometDWebsocketRouteonMessageIntegration
-      IntegrationResponseKey: $default
 Parameters:
   StackTagName:
     Type: String
