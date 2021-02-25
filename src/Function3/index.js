@@ -6,7 +6,7 @@ let send = undefined;
 function init(event) {
     console.log(event);
     const apigwManagementApi = new AWS.ApiGatewayManagementApi({ apiVersion: '2018-11-29', endpoint: event.requestContext.domainName + '/' + event.requestContext.stage }); 
-    send = async (connectionId, data) => { await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: `${data}` }).promise(); } 
+    send = async (connectionId, data) => { await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: `Echo: ${data}` }).promise(); } 
 }
 
 function getConnections() { return ddb.scan({ TableName: 'cometdwebsockets-harrysanboxenvironment-ConnectedClients-1KKM7J5EOSQVN', }).promise(); }
